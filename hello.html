@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../jQuery/jquery.mobile-1.4.4.min.css">
+<script src="../jQuery/jquery-1.11.1.js"></script>
+<script src="../jQuery/jquery.mobile-1.4.4.min.js"></script>
+
+<script type="text/javascript" src="cordova.js"></script>
+<script src="barcodescanner.js"></script>
+
+<script>
+document.addEventListener("deviceready",
+init);
+
+
+var resultDiv;
+function init(){
+$("#barcodescanner").on("click",function(){
+startScan();
+});
+resultDiv
+=
+document.querySelector("#results");
+}
+
+function startScan()
+{
+cordova.plugins.barcodeScanner.scan(
+function(result){
+var s ="Result:"+result.text+"<br/>"+
+	   "Format:"+result.format+"<br/>"+
+	   "Cancelled:"+result.cancelled;
+	   resultDiv.innerHTML=s;
+},
+
+function(error){
+alert("Scanning failed:"+ error);
+}
+);
+}
+</script>
+
+ <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+#pagefive, #map-canvas { width: 100%; height: 100%; padding: 0; }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLxbQDu_FEBFTQ6zl8vnY56eKOobZhciM"></script>
+<script>
+/*
+ * Google Maps documentation: http://code.google.com/apis/maps/documentation/javascript/basics.html
+ * Geolocation documentation: http://dev.w3.org/geo/api/spec-source.html
+ */
+$( document ).on( "pageinit", "#pagefive", function() {
+    var defaultLatLng = new google.maps.LatLng(5.586111, -0.17638899999997193);  //
+    if ( navigator.geolocation ) {
+        function success(pos) {
+            // Location found, show map with these coordinates
+			var lat=pos.coords.latitude;
+			var lon=pos.coords.longitude;
+			alert(lon);
+			alert(lat);
+            drawMap(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+        }
+        function fail(error) {
+            drawMap(defaultLatLng);  // Failed to find location, show default map
+        }
+        // Find the users current position.  Cache the location for 5 minutes, timeout after 6 seconds
+        navigator.geolocation.getCurrentPosition(success, fail, {maximumAge: 500000, enableHighAccuracy:true, timeout: 6000});
+    } else {
+        drawMap(defaultLatLng);  // No geolocation support, show default map
+    }
+    function drawMap(latlng) {
+        var myOptions = {
+            zoom: 10,
+            center: latlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        // Add an overlay to the map of current lat/lng
+        var marker = new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: "Greetings!"
+        });
+    }
+});
+
+
+var address;
+var geocoder;
+ if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(successFunction, errorFunction);
+} 
+//Get the latitude and the longitude;
+function successFunction(position) {
+    var lat = position.coords.latitude;
+    var lng = position.coords.longitude;
+    codeLatLng(lat, lng)
+}
+ 
+function errorFunction(){
+    alert("Geocoder failed");
+}
+ 
+  function initialize() {
+    geocoder = new google.maps.Geocoder();
+	
+ 
+ 
+ 
+  }
+ 
+  function codeLatLng(lat, lng) {
+ 
+    var latlng = new google.maps.LatLng(lat, lng);
+    geocoder.geocode({'latLng': latlng}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+      console.log(results)
+        if (results[1]) {
+        
+        //find country name
+             for (var i=0; i<results[0].address_components.length; i++) {
+            for (var b=0;b<results[0].address_components[i].types.length;b++) {
+ 
+            //there are different types that might hold a city admin_area_lvl_1 usually does in come cases looking for sublocality type will be more appropriate
+                if (results[0].address_components[i].types[b] == "administrative_area_level_1") {
+                    //this is the object you are looking for
+                    city= results[0].address_components[i];
+                    break;
+					}
+				}
+			}
+			 //formatted address
+         address=results[0].formatted_address;
+        //city data
+        address=city.short_name + " " + address;
+ 
+ 
+        } else {
+         address="No results found";
+        }
+      } else {
+        address="Geocoder failed due to: " + status;
+      }
+	  $("#location").html(address);
+    });
+  }
+
+
+
+	function syncAjax(u){
+				var obj=$.ajax(
+					{url:u,
+					 async:false
+					 }
+				);
+				return $.parseJSON(obj.responseText);
+				
+			}
+	function search(){
+			var name=$("#searchList").val();
+			var u="bus_action.php?cmd=5&vs="
+					+name;
+			var r=syncAjax(u);
+			
+			if(r.result==0){
+				$("divStatus").text(r.message);
+				return;
+			}
+			var i=0;
+			for(i=0;i<r.person.length;i++){
+				//$("#myList").text(r.person[i].username);
+				
+				   var parent = document.getElementById('listview');
+            var listItem = document.createElement('li');
+            listItem.setAttribute('id','listitem');
+			
+			var name=r.person[i].username;
+			alert(r.person[i].username);
+            listItem.innerHTML="<a href='#'>"+name+"</a>";
+            parent.appendChild(listItem);
+			//$("#listview").trigger('create');
+			//( "#listview" ).listview("refresh")	
+			//$( '#listview' ).listview().listview('refresh');
+			   var list = document.getElementById('listview');
+            $(list).listview("refresh");
+			}
+		}
+		
+		function filter(){
+		
+			var name=$("#filterDate").val();
+			
+			var u="bus_action.php?cmd=4&vs="
+					+name;
+					console.log(u);
+			var r=syncAjax(u);
+			console.log(r);
+			if(r.result==0){
+				$("divStatus").text(r.message);
+				console.log("Error");
+				return;
+			}
+			var i=0;
+			
+			for(i=0;i<r.person.length;i++){
+				console.log(r.person[i].username);
+				var content = '<div data-role="collapsible" data-collapsed="true" class="ui-collapsible-contain"><h3>' + r.person[i].username + '</h3><p>Reservation Date: ' + r.person[i].date + '<br>Drop off location: ' + r.person[i].name +'</p></div>';
+ $("#result").append(content).trigger('create');
+ }
+				
+	
+		}
+		
+		
+			function report(){
+		
+			var name=$("#reportDate").val();
+			
+			var u="bus_action.php?cmd=1&vs="
+					+name;
+					console.log(u);
+			var r=syncAjax(u);
+			console.log(r);
+			if(r.result==0){
+				$("divStatus").text(r.message);
+				console.log("Error");
+				return;
+			}
+			var i=0;
+			var counter=0;
+			for(i=0;i<r.num.length;i++){
+				counter++;
+			}
+			//console.log(r.num.lenght);
+			var numSeats=counter;
+			var amtGenerated=3*numSeats;
+			//Thsis assumes that the drivers seat is constant and the total number of seats int the bus is 20
+			var avaliable=19-numSeats;
+			 document.getElementById('numSeats').innerHTML = "<strong>Reserved Seats : </strong>"+numSeats+"<br><br>";
+			 document.getElementById('avaliable').innerHTML = "<strong>Avaliable Seats : </strong>"+avaliable+"<br><br>";
+			 document.getElementById('amt').innerHTML = "<strong>Avaliable Seats : GhC </strong>"+amtGenerated+".00";
+		
+		}
+		
+		
+</script>
+</head>
+
+<body onload="initialize()">
+
+
+
+	<div data-role="page" id="pageone">
+	
+		<div data-role="header" data-position="inline">
+			<a href="#pageone" data-role="button" data-transition="slide" data-icon="home" data-iconpos="notext">Home</a>
+			<h1>Ashesi Bus Transit</h1>
+			<a href="#pagefour" data-role="button" data-transition="slide" data-icon="search" data-iconpos="notext"></a>
+			
+			
+			
+
+		</div>
+		
+		
+	
+		<div role="main" class="ui-content">
+			
+			<div data-role="navbar">
+				<ul>
+					<li><a href="#pagetwo">Reservation</a></li>
+					<li><a href="#pagefive"> Transit Info</a></li>
+				</ul>
+			</div>
+			
+		
+			
+			<img src="bus.jpg" alt="Bus Picture Here" width="100%">
+			<a href="#pagesix" data-role="button" data-transition="slide" >Generate Report</a>
+		</div>
+		<a href="#" id="barcodescanner" data-role="buVon">Scan a bar code</a>
+		<div id="results"></div>
+		
+		<div data-role="footer">
+			<h1>@ ahsesi.edu.gh</h1>
+		</div>
+	</div>
+	
+	
+	
+	
+	
+	
+	
+	
+	<div data-role="page" id="pagethree">
+	
+		<div data-role="header" data-position="inline">
+			<a href="#pageone" data-role="button" data-transition="slide" data-icon="home" data-iconpos="notext">Home</a>
+			<h1>Reservation Details</h1>
+			<a href="#pagefour" data-role="button" data-transition="slide" data-icon="search" data-iconpos="notext">Home</a>
+			
+			
+			<div data-role="navbar">
+				<ul>
+				<li><a href="#pagetwo">Make Reservation</a></li>
+				<li><a href="#pagethree" class="ui-btn-active
+ui-state-persist">Reservation List</a></li>
+                
+				</ul>
+			</div>
+
+		</div>
+		
+		
+	
+		<div role="main" class="ui-content">
+			
+				
+					<label for="filterDate">Select Date to Filter by :</label>
+					<input type="date" name="filterDate" id="filterDate" value="">
+					<input type="button" value="Filter"  onclick="filter()"/>
+					
+					<div data-role="collapsible-set" id="result"></div>
+					<div id=""><b>price may change...</b></div> 
+				
+			
+			
+		
+				
+		</div>	
+			
+		<div data-role="footer">
+			<h1>@ ahsesi.edu.gh</h1>
+		</div>
+		
+	</div>
+		
+		
+		
+	
+	<div data-role="page" id="pagefour">
+	
+		<div data-role="header" data-position="inline">
+			<a href="#pageone" data-role="button" data-transition="slide" data-icon="home" data-iconpos="notext">Home</a>
+			<h1></h1>
+			<a href="#pagefour" data-role="button" data-transition="slide" data-icon="search">Search</a>
+			
+		
+
+		</div>
+		
+		
+	
+		<div role="main" class="ui-content">
+			
+			<ul data-role="listview" id="listview">
+				
+				<li data-role="list-divider">
+					<input type="search" name="searchList" id="searchList" value="" placeholder="Enter a name to search" />
+					<input type="button" value="Search" onclick="search()"/>
+				</li>
+				
+			</ul>
+			
+		</div>
+		
+		<div data-role="footer">
+			<h1>@ ahsesi.edu.gh</h1>
+		</div>
+	</div>
+	
+	
+	<div data-role="page" id="pagefive" data-url="pagefive" >
+	
+		<div data-role="header" data-theme="a">
+			<h1 id="location">Transit Map:</h1>
+		</div>
+		<div role="main" class="ui-content" id="map-canvas">
+        <!-- map loads here... -->
+		</div>
+		
+		
+	
+		<div data-role="footer">
+			<h1>@ ahsesi.edu.gh</h1>
+		</div>
+	</div>
+	
+	
+	<div data-role="page" id="pagesix">
+	
+		<div data-role="header" data-position="inline">
+			<a href="#pageone" data-role="button" data-transition="slide" data-icon="home" data-iconpos="notext">Home</a>
+			<h1>Reservation Details</h1>
+			<a href="#pagefour" data-role="button" data-transition="slide" data-icon="search" data-iconpos="notext">Home</a>
+			
+			
+			<div data-role="navbar">
+				<ul>
+				<li><a href="#pagetwo">Make Reservation</a></li>
+				<li><a href="#pagethree" class="ui-btn-active
+ui-state-persist">Reservation List</a></li>
+                
+				</ul>
+			</div>
+
+		</div>
+		
+		
+	
+		<div role="main" class="ui-content">
+			
+				
+					<label for="filterDate">Select Date to Filter Report by :</label>
+					<input type="date" name="reportDate" id="reportDate" value="">
+					<input type="button" value="Filter"  onclick="report()"/>
+					
+					<div id="numSeats" name="numSeats"><strong>Reserved Seats : </strong>Not Avaliable</div>
+					<div id="avaliable" name="avaliable"><strong>Avaliable Seats : </strong>Not Avaliable</div>
+					<div id="amt" name="amt"><strong>Amount Generated : </strong>Not Avaliable</div>
+
+				
+			
+			
+		
+				
+		</div>	
+			
+		<div data-role="footer">
+			<h1>@ ahsesi.edu.gh</h1>
+		</div>
+		
+	</div>
+		
+	
+	
+</body>
+</html>
