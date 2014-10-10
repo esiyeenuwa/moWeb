@@ -18,5 +18,5 @@
     </author>
 
     <!-- We'll include the Barcode plugin as an example -->
-    <gap:plugin name="com.phonegap.plugins.barcodescanner" />
+    <gap:plugin name="com.phonegap.plugins.barcodescanner" version="2.0.0" />
 </widget>
